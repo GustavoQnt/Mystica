@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { fetchRecentReadings, formatHistoryContext } from '@/lib/context-injection'
 import { createEmbedding } from '@/lib/gemini'
 import { hybridSearch } from '@/lib/pinecone'
+import type { ReadingStyle } from '@/lib/reading-style'
 import { buildReadingPrompt } from '@/lib/prompts'
 import { getCard, getPositionLabel, type SpreadType } from '@/lib/tarot'
 
@@ -11,13 +12,14 @@ export interface OrchestrationInput {
   userId: string
   cardIds: number[]
   spreadType: SpreadType
+  readingStyle: ReadingStyle
   question: string
 }
 
 export async function buildReadingContext(
   input: OrchestrationInput
 ): Promise<string> {
-  const { supabase, userId, cardIds, spreadType, question } = input
+  const { supabase, userId, cardIds, spreadType, readingStyle, question } = input
 
   const cards = cardIds.map((cardId) => getCard(cardId))
   const cardLines = cards.map((card, index) => (
@@ -35,12 +37,26 @@ export async function buildReadingContext(
     hybridSearch({ cardIds: [], semanticText, topK: 4 }, embedding),
   ])
 
-  const uniqueChunks = [...exactChunks, ...semanticChunks].filter((chunk, index, all) => (
-    all.indexOf(chunk) === index
-  ))
+  const jungChunks =
+    readingStyle === 'analitica'
+      ? await hybridSearch(
+          {
+            cardIds: [],
+            semanticText,
+            topK: 3,
+            supplementarySlug: 'psicologia-junguiana',
+          },
+          embedding
+        )
+      : []
+
+  const uniqueChunks = [...jungChunks, ...exactChunks, ...semanticChunks].filter(
+    (chunk, index, all) => all.indexOf(chunk) === index
+  )
 
   return buildReadingPrompt({
     spreadType,
+    readingStyle,
     cardLines,
     question,
     ragContext: uniqueChunks.join('\n\n---\n\n'),

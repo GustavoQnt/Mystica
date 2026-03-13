@@ -65,6 +65,7 @@ describe('reading decryption routes', () => {
           card_ids: [1, 2, 3],
           interpretation: '{"v":1,"ciphertext":"abc"}',
           metadata: { summary: 'kept open' },
+          reading_style: null,
           created_at: '2026-03-13T00:00:00.000Z',
           updated_at: '2026-03-13T00:00:00.000Z',
         },
@@ -79,7 +80,12 @@ describe('reading decryption routes', () => {
     })
 
     const body = (await response.json()) as {
-      reading: { question: string; interpretation: string; metadata: { summary: string } }
+      reading: {
+        question: string
+        interpretation: string
+        metadata: { summary: string }
+        reading_style: string
+      }
     }
 
     expect(decryptForUser).toHaveBeenNthCalledWith(1, 'user-1', '{"v":1}')
@@ -91,6 +97,7 @@ describe('reading decryption routes', () => {
     expect(body.reading.question).toBe('pergunta aberta')
     expect(body.reading.interpretation).toBe('interpretacao aberta')
     expect(body.reading.metadata.summary).toBe('kept open')
+    expect(body.reading.reading_style).toBe('sincera')
   })
 
   it('decrypts completed reading fields before returning history response', async () => {
@@ -103,6 +110,7 @@ describe('reading decryption routes', () => {
             question: '{"v":1}',
             card_ids: [1, 2, 3],
             metadata: { summary: 'kept open' },
+            reading_style: null,
             created_at: '2026-03-13T00:00:00.000Z',
           },
         ],
@@ -113,11 +121,16 @@ describe('reading decryption routes', () => {
 
     const response = await getHistory()
     const body = (await response.json()) as {
-      readings: Array<{ question: string; metadata: { summary: string } }>
+      readings: Array<{
+        question: string
+        metadata: { summary: string }
+        reading_style: string
+      }>
     }
 
     expect(decryptForUser).toHaveBeenCalledWith('user-1', '{"v":1}')
     expect(body.readings[0]?.question).toBe('pergunta do historico')
     expect(body.readings[0]?.metadata.summary).toBe('kept open')
+    expect(body.readings[0]?.reading_style).toBe('sincera')
   })
 })

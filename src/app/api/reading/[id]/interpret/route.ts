@@ -1,6 +1,8 @@
 import { extractMetadata, streamInterpretation } from '@/lib/gemini'
 import { decryptForUser, encryptForUser } from '@/lib/encryption'
 import { incrementCompletedReadings } from '@/lib/reading-limits'
+import { resolveReadingStyle } from '@/lib/reading-style'
+import { getSystemPromptForStyle } from '@/lib/prompts'
 import { buildReadingContext } from '@/lib/rag'
 import { createClient } from '@/lib/supabase/server'
 import type { SpreadType } from '@/lib/tarot'
@@ -42,7 +44,7 @@ export async function POST(
 
   const { data: reading } = await supabase
     .from('readings')
-    .select('id, status, spread_type, card_ids, question, interpretation, metadata')
+    .select('id, status, spread_type, card_ids, question, interpretation, metadata, reading_style')
     .eq('id', id)
     .eq('user_id', user.id)
     .single()
@@ -76,6 +78,7 @@ export async function POST(
   }
 
   let prompt: string
+  const readingStyle = resolveReadingStyle(reading.reading_style)
 
   try {
     prompt = await buildReadingContext({
@@ -83,6 +86,7 @@ export async function POST(
       userId: user.id,
       cardIds: reading.card_ids,
       spreadType: reading.spread_type as SpreadType,
+      readingStyle,
       question: reading.question ?? '',
     })
   } catch {
@@ -110,7 +114,10 @@ export async function POST(
           )
         )
 
-        const result = await streamInterpretation(prompt)
+        const result = await streamInterpretation(
+          prompt,
+          getSystemPromptForStyle(readingStyle)
+        )
 
         for await (const chunk of result.stream) {
           const text = chunk.text()

@@ -46,6 +46,7 @@ describe('HistoryListSection', () => {
               id: 'reading-1',
               question: '{"v":1,"ciphertext":"abc"}',
               spread_type: 'tres-cartas',
+              reading_style: 'analitica',
               card_ids: [1, 2, 3],
               metadata: null,
               created_at: '2026-03-13T00:00:00.000Z',
@@ -61,5 +62,6 @@ describe('HistoryListSection', () => {
 
     expect(decryptForUser).toHaveBeenCalledWith('user-1', '{"v":1,"ciphertext":"abc"}')
     expect(screen.getByRole('heading', { name: 'pergunta decriptada' })).toBeInTheDocument()
+    expect(screen.getByText(/Analítica/i)).toBeInTheDocument()
   })
 })

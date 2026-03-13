@@ -6,7 +6,6 @@ import {
 import {
   METADATA_EXTRACTION_PROMPT,
   METADATA_RESPONSE_SCHEMA,
-  SYSTEM_PROMPT,
 } from '@/lib/prompts'
 
 let genAI: GoogleGenerativeAI | null = null
@@ -52,11 +51,12 @@ export async function createEmbedding(text: string): Promise<number[]> {
 }
 
 export async function streamInterpretation(
-  userPrompt: string
+  userPrompt: string,
+  systemPrompt: string
 ): Promise<GenerateContentStreamResult> {
   const model = getClient().getGenerativeModel({
     model: TEXT_MODEL,
-    systemInstruction: SYSTEM_PROMPT,
+    systemInstruction: systemPrompt,
   })
 
   return model.generateContentStream(userPrompt)

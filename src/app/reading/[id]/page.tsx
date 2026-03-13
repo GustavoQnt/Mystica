@@ -9,12 +9,14 @@ import { AppHeader } from '@/components/AppHeader'
 import { CardReveal } from '@/components/CardReveal'
 import { ReadingStream } from '@/components/ReadingStream'
 import type { ReadingMetadata } from '@/lib/gemini'
+import { getReadingStyleLabel, type ReadingStyle } from '@/lib/reading-style'
 import type { SpreadType } from '@/lib/tarot'
 
 interface ReadingRecord {
   id: string
   status: 'drawn' | 'completed' | 'failed'
   spread_type: SpreadType
+  reading_style: ReadingStyle
   question: string
   card_ids?: number[]
   interpretation?: string | null
@@ -87,6 +89,9 @@ export default function ReadingDetailPage() {
           <h1 className="font-display mt-5 text-5xl leading-none text-[var(--foreground)] md:text-7xl">
             {reading.spread_type === 'tres-cartas' ? 'Três cartas' : 'Carta do dia'}
           </h1>
+          <p className="mt-4 text-xs uppercase tracking-[0.3em] text-[var(--accent)]">
+            {getReadingStyleLabel(reading.reading_style)}
+          </p>
           <p className="mt-6 text-sm leading-7 text-[var(--muted)] md:text-base">
             {reading.question}
           </p>
@@ -134,13 +139,13 @@ export default function ReadingDetailPage() {
                 <div className="text-sm leading-8 text-[var(--foreground)]/92 md:text-[15px] mystica-prose">
                   <ReactMarkdown
                     components={{
-                      h1: ({ children }) => <h1 className="text-2xl font-semibold mt-6 mb-4 text-[var(--accent)]">{children}</h1>,
-                      h2: ({ children }) => <h2 className="text-xl font-semibold mt-5 mb-3 text-[var(--accent)]">{children}</h2>,
-                      h3: ({ children }) => <h3 className="text-lg font-semibold mt-4 mb-2 text-[var(--accent)]">{children}</h3>,
+                      h1: ({ children }) => <h1 className="mb-4 mt-6 text-2xl font-semibold text-[var(--accent)]">{children}</h1>,
+                      h2: ({ children }) => <h2 className="mb-3 mt-5 text-xl font-semibold text-[var(--accent)]">{children}</h2>,
+                      h3: ({ children }) => <h3 className="mb-2 mt-4 text-lg font-semibold text-[var(--accent)]">{children}</h3>,
                       p: ({ children }) => <p className="mb-4">{children}</p>,
-                      ul: ({ children }) => <ul className="list-disc pl-5 mb-4">{children}</ul>,
+                      ul: ({ children }) => <ul className="mb-4 list-disc pl-5">{children}</ul>,
                       li: ({ children }) => <li className="mb-1">{children}</li>,
-                      ol: ({ children }) => <ol className="list-decimal pl-5 mb-4">{children}</ol>,
+                      ol: ({ children }) => <ol className="mb-4 list-decimal pl-5">{children}</ol>,
                       strong: ({ children }) => <strong className="font-semibold text-white/90">{children}</strong>,
                       em: ({ children }) => <em className="italic">{children}</em>,
                     }}
@@ -181,7 +186,7 @@ export default function ReadingDetailPage() {
                   href="/reading"
                   className="rounded-full bg-[var(--accent)] px-5 py-3 text-center text-sm font-semibold text-[#1d1406]"
                 >
-                  Nova tiragem
+                  Fazer nova leitura
                 </Link>
                 <Link
                   href="/history"
@@ -197,7 +202,7 @@ export default function ReadingDetailPage() {
                   }}
                   className="rounded-full border border-[var(--border)] px-5 py-3 text-sm text-[var(--muted)]"
                 >
-                  Tentar novamente
+                  Gerar interpretação novamente
                 </button>
               </div>
               {streamError && (

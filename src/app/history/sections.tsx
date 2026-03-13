@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
+import { getCardImageCandidates } from '@/lib/card-images'
 import { decryptForUser } from '@/lib/encryption'
+import { getReadingStyleLabel, resolveReadingStyle } from '@/lib/reading-style'
 import { createClient } from '@/lib/supabase/server'
 import { getCard } from '@/lib/tarot'
-import { getCardImageCandidates } from '@/lib/card-images'
 
 export async function HistoryListSection() {
   const supabase = await createClient()
@@ -18,7 +19,7 @@ export async function HistoryListSection() {
 
   const { data: readings } = await supabase
     .from('readings')
-    .select('id, question, spread_type, card_ids, metadata, created_at')
+    .select('id, question, spread_type, card_ids, metadata, created_at, reading_style')
     .eq('user_id', user.id)
     .eq('status', 'completed')
     .order('created_at', { ascending: false })
@@ -27,6 +28,7 @@ export async function HistoryListSection() {
     (readings ?? []).map(async (reading) => ({
       ...reading,
       question: await decryptForUser(user.id, reading.question),
+      reading_style: resolveReadingStyle(reading.reading_style),
     }))
   )
 
@@ -58,7 +60,8 @@ export async function HistoryListSection() {
             <div className="max-w-2xl flex-1">
               <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted-strong)]">
                 {new Date(reading.created_at).toLocaleDateString('pt-BR')} ·{' '}
-                {reading.spread_type === 'tres-cartas' ? 'Três cartas' : 'Carta do dia'}
+                {reading.spread_type === 'tres-cartas' ? 'Três cartas' : 'Carta do dia'} ·{' '}
+                {getReadingStyleLabel(reading.reading_style)}
               </p>
               <h2 className="font-display mt-4 text-3xl text-[var(--foreground)]">
                 {reading.question}
@@ -77,6 +80,7 @@ export async function HistoryListSection() {
               {(reading.card_ids ?? []).slice(0, 3).map((cardId: number) => {
                 const card = getCard(cardId)
                 const [avif, webp] = getCardImageCandidates(cardId)
+
                 return (
                   <div
                     key={cardId}

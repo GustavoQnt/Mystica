@@ -4,11 +4,13 @@ import {
   getProfileForDrawCheck,
   hasReachedFreeLimit,
 } from '@/lib/reading-limits'
+import { isReadingStyle, type ReadingStyle } from '@/lib/reading-style'
 import { createClient } from '@/lib/supabase/server'
 import { resolveCards, SPREAD_SIZES, type SpreadType } from '@/lib/tarot'
 
 interface DrawRequestBody {
   spread_type: SpreadType
+  reading_style?: ReadingStyle
   fan_indices: number[]
   question: string
 }
@@ -31,10 +33,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const { spread_type, fan_indices, question } = body
+  const { spread_type, reading_style, fan_indices, question } = body
 
   if (!spread_type || !(spread_type in SPREAD_SIZES)) {
     return NextResponse.json({ error: 'Invalid spread_type' }, { status: 400 })
+  }
+
+  if (!isReadingStyle(reading_style)) {
+    return NextResponse.json({ error: 'Invalid reading_style' }, { status: 400 })
   }
 
   if (typeof question !== 'string' || question.trim().length < 3) {
@@ -67,6 +73,7 @@ export async function POST(request: Request) {
       user_id: user.id,
       status: 'drawn',
       spread_type,
+      reading_style,
       question: question.trim(),
       card_ids: cardIds,
     })

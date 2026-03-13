@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { decryptForUser } from '@/lib/encryption'
+import { resolveReadingStyle } from '@/lib/reading-style'
 import { createClient } from '@/lib/supabase/server'
 
 export async function GET() {
@@ -15,7 +16,7 @@ export async function GET() {
 
   const { data: readings, error } = await supabase
     .from('readings')
-    .select('id, spread_type, question, card_ids, metadata, created_at')
+    .select('id, spread_type, question, card_ids, metadata, created_at, reading_style')
     .eq('user_id', user.id)
     .eq('status', 'completed')
     .order('created_at', { ascending: false })
@@ -29,6 +30,7 @@ export async function GET() {
     (readings ?? []).map(async (reading) => ({
       ...reading,
       question: await decryptForUser(user.id, reading.question),
+      reading_style: resolveReadingStyle(reading.reading_style),
     }))
   )
 

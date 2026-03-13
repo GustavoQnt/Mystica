@@ -106,6 +106,7 @@ describe('reading interpretation encryption', () => {
       id: 'reading-1',
       status: 'drawn',
       spread_type: 'tres-cartas',
+      reading_style: 'acolhedora',
       card_ids: [1, 2, 3],
       question: 'pergunta em claro',
       interpretation: null,
@@ -130,6 +131,12 @@ describe('reading interpretation encryption', () => {
 
     await readResponseBody(response)
 
+    expect(buildReadingContext).toHaveBeenCalledWith(
+      expect.objectContaining({
+        readingStyle: 'acolhedora',
+      })
+    )
+    expect(streamInterpretation).toHaveBeenCalledWith('prompt', expect.any(String))
     expect(encryptForUser).toHaveBeenNthCalledWith(1, 'user-1', 'pergunta em claro')
     expect(encryptForUser).toHaveBeenNthCalledWith(2, 'user-1', 'parte 1 parte 2')
     expect(updates).toContainEqual(
@@ -146,6 +153,7 @@ describe('reading interpretation encryption', () => {
       id: 'reading-1',
       status: 'completed',
       spread_type: 'tres-cartas',
+      reading_style: null,
       card_ids: [1, 2, 3],
       question: '{"v":1}',
       interpretation: '{"v":1,"ciphertext":"abc"}',

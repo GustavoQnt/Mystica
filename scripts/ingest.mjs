@@ -35,7 +35,24 @@ const embeddingModelName =
  *   arcanaType: CanonicalCard['arcana_type']
  *   suit: CanonicalCard['suit']
  *   chunkIndex: number
- * }} KnowledgeChunk
+ *   type: 'card'
+ * }} CardChunk
+ */
+
+/**
+ * @typedef {{
+ *   sourcePath: string
+ *   slug: string
+ *   title: string
+ *   section: string
+ *   text: string
+ *   chunkIndex: number
+ *   type: 'supplementary'
+ * }} SupplementaryChunk
+ */
+
+/**
+ * @typedef {CardChunk | SupplementaryChunk} KnowledgeChunk
  */
 
 function ensureEnv(name) {
@@ -150,7 +167,7 @@ function splitLargeSection(sectionMarkdown) {
   return chunks.filter(chunk => chunk.length >= minChunkChars)
 }
 
-function buildChunks(filePath, content, canonicalCard) {
+function buildCardChunks(filePath, content, canonicalCard) {
   const sections = splitSections(content)
   if (sections.length === 0) {
     throw new Error(`No level-2 sections found in ${filePath}`)
@@ -163,6 +180,7 @@ function buildChunks(filePath, content, canonicalCard) {
     }
 
     return fragments.map((text, chunkIndex) => ({
+      type: 'card',
       sourcePath: path.relative(projectRoot, filePath).replace(/\\/g, '/'),
       cardId: canonicalCard.id,
       cardName: canonicalCard.name,
@@ -170,6 +188,30 @@ function buildChunks(filePath, content, canonicalCard) {
       text,
       arcanaType: canonicalCard.arcana_type,
       suit: canonicalCard.suit,
+      chunkIndex,
+    }))
+  })
+}
+
+function buildSupplementaryChunks(filePath, content, frontmatter) {
+  const sections = splitSections(content)
+  if (sections.length === 0) {
+    throw new Error(`No level-2 sections found in ${filePath}`)
+  }
+
+  return sections.flatMap(section => {
+    const fragments = splitLargeSection(section.markdown)
+    if (fragments.length === 0) {
+      return []
+    }
+
+    return fragments.map((text, chunkIndex) => ({
+      type: 'supplementary',
+      sourcePath: path.relative(projectRoot, filePath).replace(/\\/g, '/'),
+      slug: frontmatter.slug,
+      title: frontmatter.title,
+      section: section.title,
+      text,
       chunkIndex,
     }))
   })
@@ -191,7 +233,7 @@ function getRetryDelayMs(error) {
 }
 
 async function createEmbeddings(model, texts) {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
     try {
       const result = await model.batchEmbedContents({
         requests: texts.map(text => ({
@@ -205,8 +247,10 @@ async function createEmbeddings(model, texts) {
 
       return result.embeddings.map(item => item.values)
     } catch (error) {
-      if (error?.status === 429 && attempt < 2) {
-        await sleep(getRetryDelayMs(error))
+      if (error?.status === 429 && attempt < 4) {
+        const delayMs = getRetryDelayMs(error) + 2_000
+        console.log(`Rate limited. Waiting ${Math.ceil(delayMs / 1000)}s (attempt ${attempt + 1}/5)...`)
+        await sleep(delayMs)
         continue
       }
 
@@ -227,16 +271,29 @@ async function main() {
   const cardsById = new Map(cards.map(card => [card.id, card]))
 
   const files = await getAllMarkdownFiles(knowledgeDir)
-  if (files.length !== cards.length) {
-    throw new Error(`Expected ${cards.length} knowledge files, found ${files.length}`)
+
+  const cardFiles = []
+  const supplementaryFiles = []
+
+  for (const filePath of files) {
+    const content = await readFile(filePath, 'utf8')
+    const frontmatter = parseFrontmatter(content, filePath)
+
+    if (frontmatter.type === 'supplementary') {
+      supplementaryFiles.push({ filePath, content, frontmatter })
+    } else {
+      cardFiles.push({ filePath, content, frontmatter })
+    }
+  }
+
+  if (cardFiles.length !== cards.length) {
+    throw new Error(`Expected ${cards.length} card knowledge files, found ${cardFiles.length}`)
   }
 
   const seenCardIds = new Set()
   const allChunks = []
 
-  for (const filePath of files) {
-    const content = await readFile(filePath, 'utf8')
-    const frontmatter = parseFrontmatter(content, filePath)
+  for (const { filePath, content, frontmatter } of cardFiles) {
     const cardId = Number(frontmatter.card_id)
 
     if (!Number.isInteger(cardId)) {
@@ -275,14 +332,36 @@ async function main() {
       )
     }
 
-    allChunks.push(...buildChunks(filePath, content, canonicalCard))
+    allChunks.push(...buildCardChunks(filePath, content, canonicalCard))
   }
 
   if (seenCardIds.size !== cards.length) {
     throw new Error(`Expected ${cards.length} unique card_ids, found ${seenCardIds.size}`)
   }
 
-  console.log(`Found ${files.length} knowledge files`)
+  const seenSlugs = new Set()
+
+  for (const { filePath, content, frontmatter } of supplementaryFiles) {
+    const slug = String(frontmatter.slug ?? '').trim()
+    const title = String(frontmatter.title ?? '').trim()
+
+    if (!slug) {
+      throw new Error(`Missing slug in supplementary file ${filePath}`)
+    }
+
+    if (!title) {
+      throw new Error(`Missing title in supplementary file ${filePath}`)
+    }
+
+    if (seenSlugs.has(slug)) {
+      throw new Error(`Duplicate slug "${slug}" in supplementary files`)
+    }
+
+    seenSlugs.add(slug)
+    allChunks.push(...buildSupplementaryChunks(filePath, content, frontmatter))
+  }
+
+  console.log(`Found ${cardFiles.length} card files + ${supplementaryFiles.length} supplementary files`)
   console.log(`Generated ${allChunks.length} chunks`)
 
   if (isDryRun) {
@@ -312,19 +391,34 @@ async function main() {
     for (let indexInBatch = 0; indexInBatch < chunkBatch.length; indexInBatch += 1) {
       const chunk = chunkBatch[indexInBatch]
       const embedding = embeddings[indexInBatch]
-      const record = {
-        id: `card-${chunk.cardId}-${slugify(chunk.section)}-${chunk.chunkIndex}`,
-        values: embedding,
-        metadata: {
-          card_id: chunk.cardId,
-          card_name: chunk.cardName,
-          section: chunk.section,
-          arcana_type: chunk.arcanaType,
-          suit: chunk.suit ?? '',
-          source_path: chunk.sourcePath,
-          text: chunk.text,
-        },
-      }
+
+      const record = chunk.type === 'card'
+        ? {
+          id: `card-${chunk.cardId}-${slugify(chunk.section)}-${chunk.chunkIndex}`,
+          values: embedding,
+          metadata: {
+            card_id: chunk.cardId,
+            card_name: chunk.cardName,
+            section: chunk.section,
+            arcana_type: chunk.arcanaType,
+            suit: chunk.suit ?? '',
+            source_path: chunk.sourcePath,
+            text: chunk.text,
+            content_type: 'card',
+          },
+        }
+        : {
+          id: `sup-${chunk.slug}-${slugify(chunk.section)}-${chunk.chunkIndex}`,
+          values: embedding,
+          metadata: {
+            section: chunk.section,
+            title: chunk.title,
+            slug: chunk.slug,
+            source_path: chunk.sourcePath,
+            text: chunk.text,
+            content_type: 'supplementary',
+          },
+        }
 
       batch.push(record)
 

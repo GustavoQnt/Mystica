@@ -18,19 +18,36 @@ export interface HybridQueryParams {
   cardIds: number[]
   semanticText: string
   topK: number
+  supplementarySlug?: string
 }
 
 export interface HybridQuery {
-  filter?: { card_id: { $in: number[] } }
+  filter?: Record<string, unknown>
   topK: number
   semanticText: string
 }
 
 export function buildHybridQuery(params: HybridQueryParams): HybridQuery {
-  const { cardIds, semanticText, topK } = params
+  const { cardIds, semanticText, topK, supplementarySlug } = params
+  const filters: Record<string, unknown>[] = []
+
+  if (cardIds.length > 0) {
+    filters.push({ card_id: { $in: cardIds } })
+  }
+
+  if (supplementarySlug) {
+    filters.push({
+      content_type: 'supplementary',
+      slug: supplementarySlug,
+    })
+  }
 
   return {
-    ...(cardIds.length > 0 ? { filter: { card_id: { $in: cardIds } } } : {}),
+    ...(filters.length === 1
+      ? { filter: filters[0] }
+      : filters.length > 1
+        ? { filter: { $and: filters } }
+        : {}),
     topK,
     semanticText,
   }

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 
 import { AppHeader } from '@/components/AppHeader'
 import { CardFan } from '@/components/CardFan'
+import type { ReadingStyle } from '@/lib/reading-style'
 import { SPREAD_SIZES, type SpreadType } from '@/lib/tarot'
 
 type Step = 'intention' | 'fan'
@@ -15,10 +16,15 @@ export default function ReadingPage() {
   const [step, setStep] = useState<Step>('intention')
   const [question, setQuestion] = useState('')
   const [spreadType, setSpreadType] = useState<SpreadType>('tres-cartas')
+  const [readingStyle, setReadingStyle] = useState<ReadingStyle | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function handleDraw(fanIndices: number[]) {
+    if (!readingStyle) {
+      return
+    }
+
     setSubmitting(true)
     setError(null)
 
@@ -28,6 +34,7 @@ export default function ReadingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           spread_type: spreadType,
+          reading_style: readingStyle,
           fan_indices: fanIndices,
           question,
         }),
@@ -47,6 +54,8 @@ export default function ReadingPage() {
     }
   }
 
+  const canContinue = question.trim().length >= 3 && readingStyle !== null
+
   return (
     <main className="mystica-shell">
       <AppHeader />
@@ -58,7 +67,8 @@ export default function ReadingPage() {
             Abra um espaço limpo para a pergunta certa.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-[var(--muted)] md:text-base">
-            Primeiro nomeie a intenção. Depois deixe a intuição escolher as cartas.
+            Primeiro nomeie a intenção. Depois escolha como quer receber a verdade e
+            deixe a intuição selecionar as cartas.
           </p>
         </div>
 
@@ -79,17 +89,41 @@ export default function ReadingPage() {
               <div>
                 <p className="mystica-label">Tipo de tiragem</p>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <SpreadOption
+                  <SelectionOption
                     title="Três cartas"
                     subtitle="Passado, presente e futuro"
                     active={spreadType === 'tres-cartas'}
                     onClick={() => setSpreadType('tres-cartas')}
                   />
-                  <SpreadOption
+                  <SelectionOption
                     title="Carta do dia"
                     subtitle="Um foco único para o agora"
                     active={spreadType === 'carta-do-dia'}
                     onClick={() => setSpreadType('carta-do-dia')}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <p className="mystica-label">Estilo da leitura</p>
+                <div className="mt-4 grid gap-4">
+                  <SelectionOption
+                    title="Sincera"
+                    subtitle="Verdade nua e crua, sem enrolação."
+                    active={readingStyle === 'sincera'}
+                    onClick={() => setReadingStyle('sincera')}
+                  />
+                  <SelectionOption
+                    title="Acolhedora"
+                    subtitle="Verdade com mais cuidado e acolhimento."
+                    active={readingStyle === 'acolhedora'}
+                    onClick={() => setReadingStyle('acolhedora')}
+                  />
+                  <SelectionOption
+                    title="Analítica"
+                    subtitle="Verdade com leitura profunda de padrões, emoções e autoconhecimento."
+                    active={readingStyle === 'analitica'}
+                    onClick={() => setReadingStyle('analitica')}
                   />
                 </div>
               </div>
@@ -101,10 +135,10 @@ export default function ReadingPage() {
                 <button
                   type="button"
                   onClick={() => setStep('fan')}
-                  disabled={question.trim().length < 3}
+                  disabled={!canContinue}
                   className="rounded-full bg-[var(--accent)] px-7 py-3 text-sm font-semibold text-[#1d1406] disabled:cursor-not-allowed disabled:opacity-35"
                 >
-                  Concentrar
+                  Continuar para escolher as cartas
                 </button>
               </div>
             </div>
@@ -127,7 +161,7 @@ export default function ReadingPage() {
                 className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]"
                 disabled={submitting}
               >
-                Voltar e ajustar pergunta
+                Voltar e editar minha pergunta
               </button>
             </div>
           </section>
@@ -137,7 +171,7 @@ export default function ReadingPage() {
   )
 }
 
-function SpreadOption({
+function SelectionOption({
   title,
   subtitle,
   active,
