@@ -7,13 +7,29 @@ import { createClient } from '@/lib/supabase/client'
 export default function LoginPage() {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   async function signInWithGoogle() {
+    if (loading) return
+
     setLoading(true)
-    await supabase.auth.signInWithOAuth({
+    setErrorMessage(null)
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        skipBrowserRedirect: true,
+      },
     })
+
+    if (error || !data?.url) {
+      setLoading(false)
+      setErrorMessage('Nao foi possivel iniciar o login com Google.')
+      return
+    }
+
+    window.location.assign(data.url)
   }
 
   return (
@@ -146,6 +162,10 @@ export default function LoginPage() {
             )}
             <span>{loading ? 'Conectando...' : 'Entrar com Google'}</span>
           </button>
+
+          {errorMessage ? (
+            <p className="mt-4 text-center text-sm text-red-300">{errorMessage}</p>
+          ) : null}
 
           {/* Decorative bottom accent line */}
           <div className="absolute bottom-0 left-1/2 h-px w-16 -translate-x-1/2 bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent opacity-40" />
