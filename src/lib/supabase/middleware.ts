@@ -23,12 +23,19 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // Use getSession() for routing decisions only — it reads the JWT from the
+  // cookie without a network round-trip to Supabase Auth (~300ms saved).
+  // This is safe here because:
+  //   1. The middleware only decides "redirect to /login or not?"
+  //   2. It never accesses user data for business logic
+  //   3. All pages & API routes still call getUser() for full authentication
+  // getSession() also refreshes expired tokens via the cookie handler above.
+  const { data: { session } } = await supabase.auth.getSession()
 
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login') ||
     request.nextUrl.pathname.startsWith('/auth')
 
-  if (!user && !isAuthRoute) {
+  if (!session && !isAuthRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
