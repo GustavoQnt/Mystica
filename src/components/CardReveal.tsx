@@ -39,7 +39,7 @@ function RevealCard({
 
   return (
     <article className="group perspective-[1200px] mystica-fade-up">
-      <div className="relative h-[360px] rounded-[1.8rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(29,21,47,0.95),rgba(11,9,22,0.95))] p-4 shadow-[0_28px_70px_rgba(6,5,14,0.45)]">
+      <div className="relative h-[420px] md:h-[480px] rounded-[1.8rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(29,21,47,0.95),rgba(11,9,22,0.95))] p-4 shadow-[0_28px_70px_rgba(6,5,14,0.45)]">
         <div className="absolute inset-0 rounded-[1.8rem] bg-[radial-gradient(circle_at_top,rgba(201,169,110,0.12),transparent_34%)]" />
         <div className="relative flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-[rgba(201,169,110,0.14)] bg-[#100d1e]">
           {hasImage ? (
@@ -47,7 +47,7 @@ function RevealCard({
             <img
               src={imageSrc}
               alt={card.name}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain"
               onError={() => setImageIndex(current => current + 1)}
             />
           ) : (

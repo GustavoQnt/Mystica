@@ -42,13 +42,13 @@ export default async function HomePage() {
 
       <section className="mx-auto max-w-6xl px-6 pb-20 pt-8 md:px-10 md:pt-14">
         <div className="mystica-fade-up text-center">
-          <p className="mystica-label">Santuario pessoal</p>
+          <p className="mystica-label">Santuário pessoal</p>
           <h1 className="font-display mx-auto mt-6 max-w-4xl text-6xl leading-[0.92] text-[var(--foreground)] md:text-8xl">
-            Um espaco silencioso para ouvir o que insiste em querer nascer.
+            Um espaço silencioso para ouvir o que insiste em querer nascer.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-[var(--muted)] md:text-base">
-            Mystica guarda a memoria das suas tiragens e devolve o conselho
-            essencial com calma, contexto e precisao ritual.
+            Mystica guarda a memória das suas tiragens e devolve o conselho
+            essencial com calma, contexto e precisão ritual.
           </p>
         </div>
 
@@ -72,13 +72,13 @@ export default async function HomePage() {
         <section className="mt-20">
           <div className="flex items-end justify-between gap-6">
             <div>
-              <p className="mystica-label">Memoria recente</p>
+              <p className="mystica-label">Memória recente</p>
               <h2 className="font-display mt-4 text-4xl text-[var(--foreground)]">
-                Seus ultimos sinais
+                Seus últimos sinais
               </h2>
             </div>
             <Link href="/history" className="text-sm text-[var(--accent)]">
-              Ver historico completo
+              Ver histórico completo
             </Link>
           </div>
 
@@ -93,7 +93,7 @@ export default async function HomePage() {
                   {new Date(reading.created_at).toLocaleDateString('pt-BR')}
                 </p>
                 <h3 className="font-display mt-4 text-3xl text-[var(--foreground)]">
-                  {reading.spread_type === 'tres-cartas' ? 'Tres cartas' : 'Carta do dia'}
+                  {reading.spread_type === 'tres-cartas' ? 'Três cartas' : 'Carta do dia'}
                 </h3>
                 <p className="mt-4 line-clamp-3 text-sm leading-7 text-[var(--muted)]">
                   {reading.question}

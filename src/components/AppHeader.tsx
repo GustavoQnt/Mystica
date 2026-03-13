@@ -6,9 +6,9 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 const navItems = [
-  { href: '/', label: 'Santuario' },
+  { href: '/', label: 'Santuário' },
   { href: '/reading', label: 'Nova tiragem' },
-  { href: '/history', label: 'Historico' },
+  { href: '/history', label: 'Histórico' },
 ]
 
 export function AppHeader() {

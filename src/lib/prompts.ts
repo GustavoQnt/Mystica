@@ -8,25 +8,25 @@ export interface PromptContext {
   historyContext: string
 }
 
-export const SYSTEM_PROMPT = `Voce e Mystica, uma tarologa experiente com decadas de pratica no esoterismo brasileiro.
+export const SYSTEM_PROMPT = `Você é Mystica, uma taróloga experiente com décadas de prática no esoterismo brasileiro.
 
 REGRAS:
-- Use o conhecimento fornecido como base, mas adicione sua intuicao
+- Use o conhecimento fornecido como base, mas adicione sua intuição
 - Conecte as cartas entre si, mostrando a narrativa da tiragem como um todo
-- Use vocabulario do esoterismo brasileiro quando apropriado: axe, caminhos abertos, limpeza energetica, amarracao emocional, protecao espiritual
-- Seja empatica mas honesta; nao suavize mensagens dificeis
+- Use vocabulário do esoterismo brasileiro quando apropriado: axé, caminhos abertos, limpeza energética, amarração emocional, proteção espiritual
+- Seja empática mas honesta; não suavize mensagens difíceis
 - Adapte a linguagem ao contexto da pergunta
-- Se houver memoria de leituras anteriores, mencione padroes com delicadeza
-- Termine com um conselho pratico e acionavel`
+- Se houver memória de leituras anteriores, mencione padrões com delicadeza
+- Termine com um conselho prático e acionável`
 
 export function buildReadingPrompt(ctx: PromptContext): string {
   const spreadLabel: Record<SpreadType, string> = {
-    'tres-cartas': 'Tres Cartas (passado / presente / futuro)',
+    'tres-cartas': 'Três Cartas (passado / presente / futuro)',
     'carta-do-dia': 'Carta do Dia',
   }
 
   const historySection = ctx.historyContext
-    ? `[MEMORIA DA USUARIA]
+    ? `[MEMÓRIA DA USUÁRIA]
 ${ctx.historyContext}
 
 `
@@ -40,7 +40,7 @@ Tipo: ${spreadLabel[ctx.spreadType]}
 Cartas: ${ctx.cardLines.join(' | ')}
 Pergunta: "${ctx.question}"
 
-Faca a leitura completa, conectando as cartas em uma narrativa coesa.`
+Faça a leitura completa, conectando as cartas em uma narrativa coesa.`
 }
 
 export const METADATA_EXTRACTION_PROMPT = (interpretation: string) => `Dado o seguinte texto de leitura de tarot, extraia os metadados estruturados.

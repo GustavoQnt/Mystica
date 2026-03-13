@@ -36,7 +36,7 @@ export default function ReadingPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Nao foi possivel selar a tiragem.')
+        throw new Error(data.error || 'Não foi possível selar a tiragem.')
       }
 
       router.push(`/reading/${data.reading_id}`)
@@ -55,10 +55,10 @@ export default function ReadingPage() {
         <div className="mystica-fade-up mx-auto max-w-3xl text-center">
           <p className="mystica-label">Nova tiragem</p>
           <h1 className="font-display mt-5 text-5xl leading-none text-[var(--foreground)] md:text-7xl">
-            Abra um espaco limpo para a pergunta certa.
+            Abra um espaço limpo para a pergunta certa.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-[var(--muted)] md:text-base">
-            Primeiro nomeie a intencao. Depois deixe a intuicao escolher as cartas.
+            Primeiro nomeie a intenção. Depois deixe a intuição escolher as cartas.
           </p>
         </div>
 
@@ -80,14 +80,14 @@ export default function ReadingPage() {
                 <p className="mystica-label">Tipo de tiragem</p>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   <SpreadOption
-                    title="Tres cartas"
+                    title="Três cartas"
                     subtitle="Passado, presente e futuro"
                     active={spreadType === 'tres-cartas'}
                     onClick={() => setSpreadType('tres-cartas')}
                   />
                   <SpreadOption
                     title="Carta do dia"
-                    subtitle="Um foco unico para o agora"
+                    subtitle="Um foco único para o agora"
                     active={spreadType === 'carta-do-dia'}
                     onClick={() => setSpreadType('carta-do-dia')}
                   />
@@ -96,7 +96,7 @@ export default function ReadingPage() {
 
               <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
                 <Link href="/" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">
-                  Voltar ao santuario
+                  Voltar ao santuário
                 </Link>
                 <button
                   type="button"

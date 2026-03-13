@@ -67,7 +67,7 @@ export default function ReadingDetailPage() {
       <main className="mystica-shell">
         <AppHeader />
         <section className="mx-auto max-w-3xl px-6 py-28 text-center text-[var(--muted)]">
-          Preparando o circulo da leitura...
+          Preparando o círculo da leitura...
         </section>
       </main>
     )
@@ -84,7 +84,7 @@ export default function ReadingDetailPage() {
         <div className="mystica-fade-up max-w-3xl">
           <p className="mystica-label">Leitura selada</p>
           <h1 className="font-display mt-5 text-5xl leading-none text-[var(--foreground)] md:text-7xl">
-            {reading.spread_type === 'tres-cartas' ? 'Tres cartas' : 'Carta do dia'}
+            {reading.spread_type === 'tres-cartas' ? 'Três cartas' : 'Carta do dia'}
           </h1>
           <p className="mt-6 text-sm leading-7 text-[var(--muted)] md:text-base">
             {reading.question}
@@ -97,9 +97,9 @@ export default function ReadingDetailPage() {
           </section>
         ) : (
           <section className="mystica-panel mystica-fade-up mt-12 rounded-[2rem] px-8 py-14 text-center">
-            <p className="mystica-label">Revelacao</p>
+            <p className="mystica-label">Revelação</p>
             <p className="mt-5 text-sm text-[var(--muted)]">
-              As cartas vao se mostrar no primeiro sopro do oraculo.
+              As cartas vão se mostrar no primeiro sopro do oráculo.
             </p>
           </section>
         )}
@@ -125,9 +125,9 @@ export default function ReadingDetailPage() {
             />
           ) : (
             <section className="mystica-panel rounded-[2rem] px-6 py-8 md:px-8">
-              <p className="mystica-label">Interpretacao</p>
+              <p className="mystica-label">Interpretação</p>
               <h2 className="font-display mt-3 text-4xl text-[var(--foreground)]">
-                A voz do oraculo
+                A voz do oráculo
               </h2>
               <div className="mystica-scroll mt-8 max-h-[420px] overflow-y-auto pr-2">
                 <p className="text-sm leading-8 text-[var(--foreground)]/92 md:text-[15px]">
@@ -139,7 +139,7 @@ export default function ReadingDetailPage() {
 
           <aside className="space-y-6">
             <section className="mystica-panel rounded-[2rem] px-6 py-7">
-              <p className="mystica-label">Conselho pratico</p>
+              <p className="mystica-label">Conselho prático</p>
               {advice ? (
                 <>
                   <h2 className="font-display mt-4 text-3xl text-[var(--accent)]">
@@ -154,13 +154,13 @@ export default function ReadingDetailPage() {
                 </>
               ) : (
                 <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-                  O conselho surgira assim que a leitura terminar de se assentar.
+                  O conselho surgirá assim que a leitura terminar de se assentar.
                 </p>
               )}
             </section>
 
             <section className="mystica-panel rounded-[2rem] px-6 py-7">
-              <p className="mystica-label">Proximo gesto</p>
+              <p className="mystica-label">Próximo gesto</p>
               <div className="mt-5 grid gap-3">
                 <Link
                   href="/reading"
@@ -172,7 +172,7 @@ export default function ReadingDetailPage() {
                   href="/history"
                   className="rounded-full border border-[var(--border)] px-5 py-3 text-center text-sm text-[var(--foreground)]"
                 >
-                  Ver historico
+                  Ver histórico
                 </Link>
                 <button
                   type="button"

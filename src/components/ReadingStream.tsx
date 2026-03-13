@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 
 import type { SpreadType } from '@/lib/tarot'
 
@@ -36,7 +37,7 @@ export function ReadingStream({
 
         if (!response.ok) {
           const message = await response.text()
-          throw new Error(message || 'Nao foi possivel interpretar a leitura.')
+          throw new Error(message || 'Não foi possível interpretar a leitura.')
         }
 
         const contentType = response.headers.get('content-type') ?? ''
@@ -55,7 +56,7 @@ export function ReadingStream({
 
         const reader = response.body?.getReader()
         if (!reader) {
-          throw new Error('Stream indisponivel.')
+          throw new Error('Stream indisponível.')
         }
 
         const decoder = new TextDecoder()
@@ -129,29 +130,51 @@ export function ReadingStream({
     <section className="mystica-panel rounded-[2rem] px-6 py-8 md:px-8">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="mystica-label">Interpretacao</p>
+          <p className="mystica-label">Interpretação</p>
           <h2 className="font-display mt-3 text-4xl text-[var(--foreground)]">
-            A voz do oraculo
+            A voz do oráculo
           </h2>
         </div>
         {status === 'loading' || status === 'streaming' ? (
           <span className="text-xs uppercase tracking-[0.3em] text-[var(--accent)] [animation:pulse-soft_2.4s_ease-in-out_infinite]">
-            Mystica esta lendo
+            Mystica está lendo
           </span>
         ) : null}
       </div>
 
       <div className="mystica-scroll mt-8 max-h-[420px] overflow-y-auto pr-2">
-        <p className="text-sm leading-8 text-[var(--foreground)]/92 md:text-[15px]">
-          <span className={text ? 'mystica-fade-in' : ''}>{text || 'Respire. O silencio antecede a revelacao.'}</span>
-        </p>
+        <div
+          className={`text-sm leading-8 text-[var(--foreground)]/92 md:text-[15px] mystica-prose ${
+            text ? 'mystica-fade-in' : ''
+          }`}
+        >
+          {text ? (
+            <ReactMarkdown
+              components={{
+                h1: ({ children }) => <h1 className="text-2xl font-semibold mt-6 mb-4 text-[var(--accent)]">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-xl font-semibold mt-5 mb-3 text-[var(--accent)]">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-lg font-semibold mt-4 mb-2 text-[var(--accent)]">{children}</h3>,
+                p: ({ children }) => <p className="mb-4">{children}</p>,
+                ul: ({ children }) => <ul className="list-disc pl-5 mb-4">{children}</ul>,
+                li: ({ children }) => <li className="mb-1">{children}</li>,
+                ol: ({ children }) => <ol className="list-decimal pl-5 mb-4">{children}</ol>,
+                strong: ({ children }) => <strong className="font-semibold text-white/90">{children}</strong>,
+                em: ({ children }) => <em className="italic">{children}</em>,
+              }}
+            >
+              {text}
+            </ReactMarkdown>
+          ) : (
+            <p>Respire. O silêncio antecede a revelação.</p>
+          )}
+        </div>
       </div>
 
       {status === 'error' && (
         <div className="mt-6 rounded-3xl border border-red-300/20 bg-red-950/20 px-4 py-4 text-sm text-red-100/90">
           <p>{error}</p>
           <p className="mt-2 text-red-100/70">
-            Recarregue a pagina para tentar novamente sem criar uma nova leitura.
+            Recarregue a página para tentar novamente sem criar uma nova leitura.
           </p>
         </div>
       )}

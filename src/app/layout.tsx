@@ -17,7 +17,7 @@ const bodyFont = Montserrat({
 
 export const metadata: Metadata = {
   title: 'Mystica',
-  description: 'Tarot, memoria e interpretacao guiada por IA em portugues do Brasil.',
+  description: 'Tarot, memória e interpretação guiada por IA em português do Brasil.',
 }
 
 export default function RootLayout({

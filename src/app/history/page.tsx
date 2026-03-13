@@ -30,10 +30,10 @@ export default async function HistoryPage() {
         <div className="mystica-fade-up max-w-3xl">
           <p className="mystica-label">Arquivo ritual</p>
           <h1 className="font-display mt-5 text-5xl leading-none text-[var(--foreground)] md:text-7xl">
-            Historico de leituras
+            Histórico de leituras
           </h1>
           <p className="mt-6 text-sm leading-7 text-[var(--muted)] md:text-base">
-            Um rastro claro das perguntas que ja atravessaram voce.
+            Um rastro claro das perguntas que já atravessaram você.
           </p>
         </div>
 
@@ -48,7 +48,7 @@ export default async function HistoryPage() {
                 <div className="max-w-2xl">
                   <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted-strong)]">
                     {new Date(reading.created_at).toLocaleDateString('pt-BR')} ·{' '}
-                    {reading.spread_type === 'tres-cartas' ? 'Tres cartas' : 'Carta do dia'}
+                    {reading.spread_type === 'tres-cartas' ? 'Três cartas' : 'Carta do dia'}
                   </p>
                   <h2 className="font-display mt-4 text-3xl text-[var(--foreground)]">
                     {reading.question}
@@ -59,7 +59,7 @@ export default async function HistoryPage() {
                     'energy' in reading.metadata &&
                     typeof reading.metadata.energy === 'string'
                       ? reading.metadata.energy
-                      : 'Leitura concluida e guardada na memoria do santuario.'}
+                      : 'Leitura concluída e guardada na memória do santuário.'}
                   </p>
                 </div>
 
@@ -80,10 +80,10 @@ export default async function HistoryPage() {
           {!readings?.length && (
             <div className="mystica-panel rounded-[2rem] px-8 py-14 text-center">
               <p className="font-display text-4xl text-[var(--foreground)]">
-                Nenhuma leitura concluida ainda.
+                Nenhuma leitura concluída ainda.
               </p>
               <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-[var(--muted)]">
-                Quando a primeira leitura se encerrar, ela aparecera aqui com data,
+                Quando a primeira leitura se encerrar, ela aparecerá aqui com data,
                 pergunta e sinais revelados.
               </p>
             </div>
