@@ -2,6 +2,14 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
+  const isAuthRoute =
+    request.nextUrl.pathname.startsWith('/login') ||
+    request.nextUrl.pathname.startsWith('/auth')
+
+  if (isAuthRoute) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -30,10 +38,9 @@ export async function updateSession(request: NextRequest) {
   //   2. It never accesses user data for business logic
   //   3. All pages & API routes still call getUser() for full authentication
   // getSession() also refreshes expired tokens via the cookie handler above.
-  const { data: { session } } = await supabase.auth.getSession()
-
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login') ||
-    request.nextUrl.pathname.startsWith('/auth')
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
 
   if (!session && !isAuthRoute) {
     const url = request.nextUrl.clone()

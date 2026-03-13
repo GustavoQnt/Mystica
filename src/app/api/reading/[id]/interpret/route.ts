@@ -1,4 +1,5 @@
 import { extractMetadata, streamInterpretation } from '@/lib/gemini'
+import { decryptForUser, encryptForUser } from '@/lib/encryption'
 import { incrementCompletedReadings } from '@/lib/reading-limits'
 import { buildReadingContext } from '@/lib/rag'
 import { createClient } from '@/lib/supabase/server'
@@ -51,7 +52,9 @@ export async function POST(
   }
 
   if (reading.status === 'completed' && reading.interpretation) {
-    return new Response(reading.interpretation, {
+    const interpretation = await decryptForUser(user.id, reading.interpretation)
+
+    return new Response(interpretation, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     })
   }
@@ -123,7 +126,8 @@ export async function POST(
           .from('readings')
           .update({
             status: 'completed',
-            interpretation: fullText,
+            question: await encryptForUser(user.id, reading.question ?? ''),
+            interpretation: await encryptForUser(user.id, fullText),
             updated_at: new Date().toISOString(),
           })
           .eq('id', id)

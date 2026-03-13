@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
+import { decryptForUser } from '@/lib/encryption'
 import { createClient } from '@/lib/supabase/server'
 import { getCard } from '@/lib/tarot'
 import { getCardImageCandidates } from '@/lib/card-images'
@@ -22,7 +23,14 @@ export async function HistoryListSection() {
     .eq('status', 'completed')
     .order('created_at', { ascending: false })
 
-  if (!readings?.length) {
+  const decryptedReadings = await Promise.all(
+    (readings ?? []).map(async (reading) => ({
+      ...reading,
+      question: await decryptForUser(user.id, reading.question),
+    }))
+  )
+
+  if (!decryptedReadings.length) {
     return (
       <div className="mt-12">
         <div className="mystica-panel rounded-[2rem] px-8 py-14 text-center">
@@ -40,7 +48,7 @@ export async function HistoryListSection() {
 
   return (
     <div className="mt-12 grid gap-5">
-      {readings.map((reading) => (
+      {decryptedReadings.map((reading) => (
         <Link
           key={reading.id}
           href={`/reading/${reading.id}`}

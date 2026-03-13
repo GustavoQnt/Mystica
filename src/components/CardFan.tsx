@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 
 interface CardFanProps {
   totalCards?: number
@@ -85,6 +85,17 @@ export function CardFan({
   onComplete,
 }: CardFanProps) {
   const [selected, setSelected] = useState<number[]>([])
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      const el = scrollContainerRef.current
+      if (el.scrollWidth > el.clientWidth) {
+        // Center the horizontal scroll on load
+        el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
+      }
+    }
+  }, [totalCards])
 
   const cards = useMemo(
     () =>
@@ -127,7 +138,7 @@ export function CardFan({
       <CardBackDefs />
       <div className="text-center">
         <p className="mystica-label">Escolha guiada</p>
-        <h2 className="font-display mt-4 text-4xl text-[var(--foreground)]">
+        <h2 className="font-display mt-4 text-3xl sm:text-4xl text-[var(--foreground)]">
           Toque nas cartas que chamarem você.
         </h2>
         <p className="mt-4 text-sm text-[var(--muted)]">
@@ -135,8 +146,12 @@ export function CardFan({
         </p>
       </div>
 
-      <div className="relative mx-auto mt-6 h-[260px] w-full max-w-[1200px] overflow-visible sm:h-[320px] md:mt-10 md:h-[400px]">
-        {cards.map((card, visualIndex) => {
+      <div 
+        ref={scrollContainerRef}
+        className="-mx-4 mt-6 overflow-x-auto px-6 pb-24 pt-16 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:mt-0 sm:overflow-visible sm:p-0"
+      >
+        <div className="relative mx-auto h-[260px] w-[1200px] max-w-none sm:mt-6 sm:h-[320px] sm:w-full sm:max-w-[1200px] md:mt-10 md:h-[400px]">
+          {cards.map((card, visualIndex) => {
           const isSelected = selected.includes(card.index)
           return (
             <button
@@ -163,6 +178,7 @@ export function CardFan({
             </button>
           )
         })}
+      </div>
       </div>
 
       <div className="mt-6 flex justify-center">

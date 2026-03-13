@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { TodaysAdvice } from '@/components/TodaysAdvice'
+import { getCardImageCandidates } from '@/lib/card-images'
+import { decryptForUser } from '@/lib/encryption'
 import { createClient } from '@/lib/supabase/server'
 import { getCard } from '@/lib/tarot'
 
@@ -23,7 +25,12 @@ async function getReadings() {
     .order('created_at', { ascending: false })
     .limit(4)
 
-  return readings ?? []
+  return Promise.all(
+    (readings ?? []).map(async (reading) => ({
+      ...reading,
+      question: await decryptForUser(user.id, reading.question),
+    }))
+  )
 }
 
 export async function AdviceSection() {
@@ -70,14 +77,33 @@ export async function RecentReadingsSection() {
           <p className="mt-4 line-clamp-3 text-sm leading-7 text-[var(--muted)]">
             {reading.question}
           </p>
-          <div className="mt-6 flex gap-3">
+          <div className="mt-6 flex gap-4 overflow-x-auto pb-2">
             {(reading.card_ids ?? []).slice(0, 3).map((cardId: number) => (
-              <div
-                key={cardId}
-                className="flex h-20 w-14 items-center justify-center rounded-2xl border border-[var(--border)] bg-[linear-gradient(180deg,#1c1530,#100d1f)] px-2 text-center text-[11px] leading-4 text-[var(--accent)]"
-              >
-                {getCard(cardId).name}
-              </div>
+              (() => {
+                const card = getCard(cardId)
+                const [avif, webp] = getCardImageCandidates(cardId)
+
+                return (
+                  <div
+                    key={cardId}
+                    className="flex w-16 shrink-0 flex-col items-center gap-1.5"
+                  >
+                    <picture>
+                      {avif && <source srcSet={avif} type="image/avif" />}
+                      {webp && <source srcSet={webp} type="image/webp" />}
+                      <img
+                        src={webp || avif}
+                        alt={card.name}
+                        className="h-24 w-16 rounded-[0.7rem] border border-[var(--border)] object-cover"
+                        loading="lazy"
+                      />
+                    </picture>
+                    <span className="text-center text-[10px] leading-tight text-[var(--muted)]">
+                      {card.name}
+                    </span>
+                  </div>
+                )
+              })()
             ))}
           </div>
         </Link>

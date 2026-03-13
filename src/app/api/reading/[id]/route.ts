@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { decryptForUser } from '@/lib/encryption'
 import { createClient } from '@/lib/supabase/server'
 
 export async function GET(
@@ -34,5 +35,11 @@ export async function GET(
     return NextResponse.json({ reading: safeReading })
   }
 
-  return NextResponse.json({ reading })
+  const decryptedReading = {
+    ...reading,
+    question: await decryptForUser(user.id, reading.question),
+    interpretation: await decryptForUser(user.id, reading.interpretation),
+  }
+
+  return NextResponse.json({ reading: decryptedReading })
 }
