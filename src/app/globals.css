@@ -184,3 +184,24 @@ select {
     height: 16rem;
   }
 }
+
+/* Skeleton wrapper: invisible for first 400ms, then fades in.
+   This prevents the skeleton from flashing on fast navigations. */
+.mystica-skeleton {
+  animation: skeleton-delay 400ms ease both;
+}
+
+@keyframes skeleton-delay {
+  0%, 99% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

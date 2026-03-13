@@ -1,6 +1,6 @@
 export default function HistoryLoading() {
   return (
-    <main className="mystica-shell">
+    <main className="mystica-shell mystica-skeleton">
       {/* Header skeleton */}
       <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6 md:px-10">
         <div className="h-9 w-28 animate-pulse rounded-lg bg-white/5" />

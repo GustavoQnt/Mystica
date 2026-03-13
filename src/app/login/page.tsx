@@ -1,35 +1,41 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
+  const lockRef = useRef(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   async function signInWithGoogle() {
-    if (loading) return
+    // Double protection: useState for UI + useRef as permanent lock
+    if (lockRef.current) return
+    lockRef.current = true
 
     setLoading(true)
     setErrorMessage(null)
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        skipBrowserRedirect: true,
-      },
-    })
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
 
-    if (error || !data?.url) {
+      if (error || !data?.url) {
+        throw new Error('Não foi possível iniciar o login.')
+      }
+
+      // Browser will redirect — keep loading state and lock active
+    } catch {
+      lockRef.current = false
       setLoading(false)
-      setErrorMessage('Nao foi possivel iniciar o login com Google.')
-      return
+      setErrorMessage('Não foi possível conectar ao Google. Tente novamente.')
     }
-
-    window.location.assign(data.url)
   }
 
   return (
@@ -194,12 +200,7 @@ export default function LoginPage() {
         Tarot · Memória · Intuição
       </p>
 
-      {/* Spin keyframe for loader */}
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+
     </main>
   )
 }
