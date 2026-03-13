@@ -3,6 +3,7 @@ import { incrementCompletedReadings } from '@/lib/reading-limits'
 import { buildReadingContext } from '@/lib/rag'
 import { createClient } from '@/lib/supabase/server'
 import type { SpreadType } from '@/lib/tarot'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 function encodeSseEvent(event: string, data: unknown) {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
@@ -20,6 +21,22 @@ export async function POST(
 
   if (!user) {
     return new Response('Unauthorized', { status: 401 })
+  }
+
+  // 1. Rate Limit Check (Technical Shield)
+  // Prevent the user from spamming the generation endpoint too fast.
+  const rateLimitResult = await checkRateLimit(user.id)
+  
+  if (!rateLimitResult.success) {
+    return new Response('Too Many Requests. Please slow down and try again in a few seconds.', {
+      status: 429,
+      headers: {
+        'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+        'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+        'X-RateLimit-Reset': rateLimitResult.reset.toString(),
+        'Retry-After': Math.ceil((rateLimitResult.reset - Date.now()) / 1000).toString(),
+      },
+    })
   }
 
   const { data: reading } = await supabase
