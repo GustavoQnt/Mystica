@@ -64,9 +64,11 @@ export async function decryptForUser(userId: string, value: string | null) {
   return plaintext.toString('utf8')
 }
 
-function deriveUserKey(userId: string) {
+function deriveUserKey(userId: string): Buffer {
   const masterKey = getMasterKey()
-  return hkdfSync('sha256', masterKey, Buffer.from(userId, 'utf8'), HKDF_INFO, KEY_LENGTH)
+  return Buffer.from(
+    hkdfSync('sha256', masterKey, Buffer.from(userId, 'utf8'), HKDF_INFO, KEY_LENGTH)
+  )
 }
 
 function getMasterKey() {
