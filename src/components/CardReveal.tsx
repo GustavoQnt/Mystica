@@ -12,7 +12,7 @@ interface CardRevealProps {
 
 export function CardReveal({ cardIds, spreadType }: CardRevealProps) {
   return (
-    <div className="grid gap-5 md:grid-cols-3">
+    <div className={`-mx-4 flex snap-x snap-mandatory gap-6 overflow-x-auto px-6 pb-12 pt-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:overflow-visible md:p-0 ${cardIds.length === 1 ? 'justify-center md:flex md:justify-center' : 'md:grid md:grid-cols-3'}`}>
       {cardIds.map((cardId, index) => (
         <RevealCard
           key={`${cardId}-${index}`}
@@ -38,8 +38,8 @@ function RevealCard({
   const hasImage = Boolean(imageSrc)
 
   return (
-    <article className="group perspective-[1200px] mystica-fade-up">
-      <div className="relative h-[420px] md:h-[480px] rounded-[1.8rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(29,21,47,0.95),rgba(11,9,22,0.95))] p-4 shadow-[0_28px_70px_rgba(6,5,14,0.45)]">
+    <article className="group perspective-[1200px] mystica-fade-up relative w-[85vw] max-w-[340px] shrink-0 snap-center md:w-auto md:max-w-none">
+      <div className="relative h-[460px] md:h-[480px] rounded-[1.8rem] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(29,21,47,0.95),rgba(11,9,22,0.95))] p-4 shadow-[0_28px_70px_rgba(6,5,14,0.45)]">
         <div className="absolute inset-0 rounded-[1.8rem] bg-[radial-gradient(circle_at_top,rgba(201,169,110,0.12),transparent_34%)]" />
         <div className="relative flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-[rgba(201,169,110,0.14)] bg-[#100d1e]">
           {hasImage ? (
