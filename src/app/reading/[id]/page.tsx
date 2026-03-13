@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import ReactMarkdown from 'react-markdown'
 
 import { AppHeader } from '@/components/AppHeader'
 import { CardReveal } from '@/components/CardReveal'
@@ -130,9 +131,23 @@ export default function ReadingDetailPage() {
                 A voz do oráculo
               </h2>
               <div className="mystica-scroll mt-8 max-h-[420px] overflow-y-auto pr-2">
-                <p className="text-sm leading-8 text-[var(--foreground)]/92 md:text-[15px]">
-                  {reading.interpretation}
-                </p>
+                <div className="text-sm leading-8 text-[var(--foreground)]/92 md:text-[15px] mystica-prose">
+                  <ReactMarkdown
+                    components={{
+                      h1: ({ children }) => <h1 className="text-2xl font-semibold mt-6 mb-4 text-[var(--accent)]">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-xl font-semibold mt-5 mb-3 text-[var(--accent)]">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-lg font-semibold mt-4 mb-2 text-[var(--accent)]">{children}</h3>,
+                      p: ({ children }) => <p className="mb-4">{children}</p>,
+                      ul: ({ children }) => <ul className="list-disc pl-5 mb-4">{children}</ul>,
+                      li: ({ children }) => <li className="mb-1">{children}</li>,
+                      ol: ({ children }) => <ol className="list-decimal pl-5 mb-4">{children}</ol>,
+                      strong: ({ children }) => <strong className="font-semibold text-white/90">{children}</strong>,
+                      em: ({ children }) => <em className="italic">{children}</em>,
+                    }}
+                  >
+                    {reading.interpretation ?? ''}
+                  </ReactMarkdown>
+                </div>
               </div>
             </section>
           )}
