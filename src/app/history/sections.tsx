@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase/server'
 import { getCard } from '@/lib/tarot'
+import { getCardImageCandidates } from '@/lib/card-images'
 
 export async function HistoryListSection() {
   const supabase = await createClient()
@@ -46,7 +47,7 @@ export async function HistoryListSection() {
           className="mystica-panel rounded-[1.9rem] px-6 py-6 md:px-8"
         >
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div className="max-w-2xl">
+            <div className="max-w-2xl flex-1">
               <p className="text-xs uppercase tracking-[0.28em] text-[var(--muted-strong)]">
                 {new Date(reading.created_at).toLocaleDateString('pt-BR')} ·{' '}
                 {reading.spread_type === 'tres-cartas' ? 'Três cartas' : 'Carta do dia'}
@@ -64,15 +65,31 @@ export async function HistoryListSection() {
               </p>
             </div>
 
-            <div className="flex gap-3">
-              {(reading.card_ids ?? []).slice(0, 3).map((cardId: number) => (
-                <div
-                  key={cardId}
-                  className="flex h-24 w-16 items-center justify-center rounded-[1.3rem] border border-[var(--border)] bg-[linear-gradient(180deg,#1c1530,#100d1f)] px-2 text-center text-[11px] leading-4 text-[var(--accent)]"
-                >
-                  {getCard(cardId).name}
-                </div>
-              ))}
+            <div className="flex gap-4 overflow-x-auto pb-2 md:gap-3 md:pb-0">
+              {(reading.card_ids ?? []).slice(0, 3).map((cardId: number) => {
+                const card = getCard(cardId)
+                const [avif, webp] = getCardImageCandidates(cardId)
+                return (
+                  <div
+                    key={cardId}
+                    className="flex w-16 shrink-0 flex-col items-center gap-1.5"
+                  >
+                    <picture>
+                      {avif && <source srcSet={avif} type="image/avif" />}
+                      {webp && <source srcSet={webp} type="image/webp" />}
+                      <img
+                        src={webp || avif}
+                        alt={card.name}
+                        className="h-24 w-16 rounded-[0.7rem] border border-[var(--border)] object-cover"
+                        loading="lazy"
+                      />
+                    </picture>
+                    <span className="text-center text-[10px] leading-tight text-[var(--muted)]">
+                      {card.name}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </Link>
