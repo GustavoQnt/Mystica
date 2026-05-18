@@ -10,7 +10,7 @@ import {
 
 let genAI: GoogleGenerativeAI | null = null
 
-const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-3.1-flash-lite-preview'
+const TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-2.5-flash-lite'
 const EMBEDDING_MODEL =
   process.env.GEMINI_EMBEDDING_MODEL || 'gemini-embedding-001'
 
