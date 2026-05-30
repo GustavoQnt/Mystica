@@ -52,9 +52,10 @@ export default function ReadingDetailPage() {
       setSpreadType(data.reading.spread_type)
       setCardIds(data.reading.card_ids ?? [])
 
+      // card_ids are withheld by the API while the reading is "drawn", so gate
+      // the probe on spread type only. The probe endpoint returns the cards.
       const needsProbe =
         data.reading.status !== 'completed' &&
-        (data.reading.card_ids?.length ?? 0) > 0 &&
         data.reading.spread_type === 'tres-cartas'
       setPhase(needsProbe ? 'probe' : 'interpret')
 
@@ -126,6 +127,7 @@ export default function ReadingDetailPage() {
             phase === 'probe' ? (
               <ProbeStep
                 readingId={reading.id}
+                onCards={(ids) => setCardIds(ids)}
                 onDone={(qa) => {
                   setProbeAnswers(qa)
                   setPhase('interpret')

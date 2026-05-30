@@ -84,11 +84,12 @@ describe('POST /api/reading/[id]/probe', () => {
     expect(mockGenerate).not.toHaveBeenCalled()
   })
 
-  it('returns generated questions on success', async () => {
+  it('returns generated questions and the drawn cards on success', async () => {
     const res = await POST(new Request('http://x'), ctx)
     const body = await res.json()
     expect(res.status).toBe(200)
     expect(body.questions).toEqual(['Pergunta ancorada 1?'])
+    expect(body.card_ids).toEqual([1, 2, 3])
     expect(mockGenerate).toHaveBeenCalled()
   })
 

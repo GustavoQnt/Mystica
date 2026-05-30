@@ -7,6 +7,8 @@ import type { ProbeQA } from '@/lib/probe'
 interface ProbeStepProps {
   readingId: string
   onDone: (qa: ProbeQA[]) => void
+  /** Reveal the drawn cards as soon as the probe loads them. */
+  onCards?: (cardIds: number[]) => void
 }
 
 /**
@@ -14,15 +16,17 @@ interface ProbeStepProps {
  * The querent can answer (sharper reading) or skip (reads anyway). If the probe
  * returns nothing, this step resolves itself immediately.
  */
-export function ProbeStep({ readingId, onDone }: ProbeStepProps) {
+export function ProbeStep({ readingId, onDone, onCards }: ProbeStepProps) {
   const [questions, setQuestions] = useState<string[] | null>(null)
   const [answers, setAnswers] = useState<string[]>([])
-  // Latest onDone for the effect path (avoids re-running the probe fetch when
+  // Latest callbacks for the effect path (avoids re-running the probe fetch when
   // the parent re-renders). Click handlers call onDone directly.
   const onDoneRef = useRef(onDone)
+  const onCardsRef = useRef(onCards)
   useEffect(() => {
     onDoneRef.current = onDone
-  }, [onDone])
+    onCardsRef.current = onCards
+  }, [onDone, onCards])
 
   useEffect(() => {
     let active = true
@@ -32,9 +36,12 @@ export function ProbeStep({ readingId, onDone }: ProbeStepProps) {
         const res = await fetch(`/api/reading/${readingId}/probe`, {
           method: 'POST',
         })
-        const data = res.ok ? await res.json() : { questions: [] }
+        const data = res.ok ? await res.json() : { questions: [], card_ids: [] }
         if (!active) {
           return
+        }
+        if (Array.isArray(data.card_ids) && data.card_ids.length > 0) {
+          onCardsRef.current?.(data.card_ids)
         }
         const qs: string[] = Array.isArray(data.questions) ? data.questions : []
         if (qs.length === 0) {

@@ -50,9 +50,11 @@ export async function POST(
     )
   }
 
-  // No cards to anchor questions to (e.g. card-do-dia / dream): skip gracefully.
-  if (!reading.card_ids || reading.card_ids.length === 0) {
-    return NextResponse.json({ questions: [] })
+  const cardIds: number[] = reading.card_ids ?? []
+
+  // No cards to anchor questions to (e.g. carta-do-dia / dream): skip gracefully.
+  if (cardIds.length === 0) {
+    return NextResponse.json({ questions: [], card_ids: cardIds })
   }
 
   const readingStyle = resolveReadingStyle(reading.reading_style)
@@ -61,7 +63,7 @@ export async function POST(
     const { cardLines, ragContext } = await retrieveReadingKnowledge({
       supabase,
       userId: user.id,
-      cardIds: reading.card_ids,
+      cardIds,
       spreadType: reading.spread_type as SpreadType,
       readingStyle,
       question: reading.question ?? '',
@@ -75,11 +77,11 @@ export async function POST(
       ragContext,
     })
 
-    return NextResponse.json({ questions })
+    return NextResponse.json({ questions, card_ids: cardIds })
   } catch (error) {
     // Probe is an enhancement, never a blocker: on failure, return no questions
-    // and let the reading proceed normally.
+    // (the interpret stream will still reveal the cards) and let the reading proceed.
     console.error('Probe generation failed:', error)
-    return NextResponse.json({ questions: [] })
+    return NextResponse.json({ questions: [], card_ids: cardIds })
   }
 }
