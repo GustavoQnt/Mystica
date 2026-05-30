@@ -3,6 +3,7 @@ import { decryptForUser, encryptForUser } from '@/lib/encryption'
 import { incrementCompletedReadings } from '@/lib/reading-limits'
 import { resolveReadingStyle } from '@/lib/reading-style'
 import { getSystemPromptForStyle } from '@/lib/prompts'
+import { formatProbeContext, parseProbeQA, type ProbeQA } from '@/lib/probe'
 import { buildReadingContext } from '@/lib/rag'
 import { createClient } from '@/lib/supabase/server'
 import type { SpreadType } from '@/lib/tarot'
@@ -13,7 +14,7 @@ function encodeSseEvent(event: string, data: unknown) {
 }
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
@@ -24,6 +25,15 @@ export async function POST(
 
   if (!user) {
     return new Response('Unauthorized', { status: 401 })
+  }
+
+  // Optional "Mystica pergunta" answers. Absent/invalid body = skip path.
+  let bodyQa: ProbeQA[] = []
+  try {
+    const body = (await request.json()) as { qa?: unknown }
+    bodyQa = parseProbeQA(body?.qa)
+  } catch {
+    bodyQa = []
   }
 
   // 1. Rate Limit Check (Technical Shield)
@@ -44,7 +54,7 @@ export async function POST(
 
   const { data: reading } = await supabase
     .from('readings')
-    .select('id, status, spread_type, card_ids, question, interpretation, metadata, reading_style')
+    .select('id, status, spread_type, card_ids, question, interpretation, metadata, reading_style, extra_context')
     .eq('id', id)
     .eq('user_id', user.id)
     .single()
@@ -80,15 +90,30 @@ export async function POST(
   let prompt: string
   const readingStyle = resolveReadingStyle(reading.reading_style)
 
+  // Probe answers: from this request, or (on regenerate) from saved extra_context.
+  let qa = bodyQa
+  if (qa.length === 0 && reading.extra_context) {
+    try {
+      const saved = await decryptForUser(user.id, reading.extra_context)
+      qa = parseProbeQA(JSON.parse(saved ?? '[]'))
+    } catch {
+      qa = []
+    }
+  }
+  const probeContext = formatProbeContext(qa)
+
   try {
-    prompt = await buildReadingContext({
-      supabase,
-      userId: user.id,
-      cardIds: reading.card_ids,
-      spreadType: reading.spread_type as SpreadType,
-      readingStyle,
-      question: reading.question ?? '',
-    })
+    prompt = await buildReadingContext(
+      {
+        supabase,
+        userId: user.id,
+        cardIds: reading.card_ids,
+        spreadType: reading.spread_type as SpreadType,
+        readingStyle,
+        question: reading.question ?? '',
+      },
+      probeContext
+    )
   } catch {
     await supabase
       .from('readings')
@@ -129,12 +154,18 @@ export async function POST(
           controller.enqueue(encoder.encode(encodeSseEvent('text', { chunk: text })))
         }
 
+        const encryptedExtra =
+          bodyQa.length > 0
+            ? await encryptForUser(user.id, JSON.stringify(bodyQa))
+            : null
+
         await supabase
           .from('readings')
           .update({
             status: 'completed',
             question: await encryptForUser(user.id, reading.question ?? ''),
             interpretation: await encryptForUser(user.id, fullText),
+            ...(encryptedExtra ? { extra_context: encryptedExtra } : {}),
             updated_at: new Date().toISOString(),
           })
           .eq('id', id)

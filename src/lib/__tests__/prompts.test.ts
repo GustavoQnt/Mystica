@@ -12,15 +12,24 @@ describe('prompts', () => {
     expect(prompt).toContain('tola')
   })
 
-  it('builds an analitica system prompt with Jungian framing', () => {
+  it('builds an analitica system prompt with Jungian framing that stays affirmative', () => {
     const prompt = getSystemPromptForStyle('analitica')
 
     expect(prompt).toContain('arquétipos')
     expect(prompt).toContain('sombra')
     expect(prompt).toContain('individuação')
     expect(prompt).toContain('psicologia junguiana')
-    expect(prompt).toContain('modo subjuntivo')
-    expect(prompt).toContain('não como uma bola de cristal')
+    // New contract: Jungian lens is a depth tool, never an excuse to hedge.
+    expect(prompt).not.toContain('modo subjuntivo')
+    expect(prompt).toContain('crava o que vai acontecer')
+  })
+
+  it('base prompt mandates affirmative future-telling and forbids hedging', () => {
+    const prompt = getSystemPromptForStyle('sincera')
+
+    expect(prompt).toContain('LÊ O FUTURO')
+    expect(prompt).toContain('PROIBIDO hesitar')
+    expect(prompt).toContain('CVV')
   })
 
   it('builds an acolhedora system prompt with validation before guidance', () => {
@@ -43,5 +52,26 @@ describe('prompts', () => {
     })
 
     expect(prompt).toContain('Estilo da leitura: acolhedora')
+  })
+
+  it('injects the probe Q&A section only when probeContext is provided', () => {
+    const base = {
+      spreadType: 'tres-cartas' as const,
+      readingStyle: 'sincera' as const,
+      cardLines: ['O Sol (futuro)'],
+      question: 'Ele volta?',
+      ragContext: 'rag',
+      historyContext: '',
+    }
+
+    const without = buildReadingPrompt(base)
+    expect(without).not.toContain('O QUE A CONSULENTE RESPONDEU')
+
+    const withProbe = buildReadingPrompt({
+      ...base,
+      probeContext: 'P: Faz quanto tempo?\nR: Dois meses',
+    })
+    expect(withProbe).toContain('O QUE A CONSULENTE RESPONDEU')
+    expect(withProbe).toContain('Dois meses')
   })
 })

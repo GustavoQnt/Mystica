@@ -7,8 +7,10 @@ import ReactMarkdown from 'react-markdown'
 
 import { AppHeader } from '@/components/AppHeader'
 import { CardReveal } from '@/components/CardReveal'
+import { ProbeStep } from '@/components/ProbeStep'
 import { ReadingStream } from '@/components/ReadingStream'
 import type { ReadingMetadata } from '@/lib/gemini'
+import type { ProbeQA } from '@/lib/probe'
 import { getReadingStyleLabel, type ReadingStyle } from '@/lib/reading-style'
 import type { SpreadType } from '@/lib/tarot'
 
@@ -32,6 +34,8 @@ export default function ReadingDetailPage() {
   const [loading, setLoading] = useState(true)
   const [streamKey, setStreamKey] = useState(0)
   const [streamError, setStreamError] = useState<string | null>(null)
+  const [phase, setPhase] = useState<'probe' | 'interpret'>('interpret')
+  const [probeAnswers, setProbeAnswers] = useState<ProbeQA[]>([])
 
   useEffect(() => {
     async function loadReading() {
@@ -47,6 +51,13 @@ export default function ReadingDetailPage() {
       setReading(data.reading)
       setSpreadType(data.reading.spread_type)
       setCardIds(data.reading.card_ids ?? [])
+
+      const needsProbe =
+        data.reading.status !== 'completed' &&
+        (data.reading.card_ids?.length ?? 0) > 0 &&
+        data.reading.spread_type === 'tres-cartas'
+      setPhase(needsProbe ? 'probe' : 'interpret')
+
       setLoading(false)
     }
 
@@ -112,23 +123,34 @@ export default function ReadingDetailPage() {
 
         <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           {shouldStream ? (
-            <ReadingStream
-              key={streamKey}
-              readingId={reading.id}
-              onCards={(payload) => {
-                setCardIds(payload.card_ids)
-                setSpreadType(payload.spread_type)
-                setStreamError(null)
-              }}
-              onComplete={() => {
-                setStreamError(null)
-                void refreshReading()
-                window.setTimeout(() => {
+            phase === 'probe' ? (
+              <ProbeStep
+                readingId={reading.id}
+                onDone={(qa) => {
+                  setProbeAnswers(qa)
+                  setPhase('interpret')
+                }}
+              />
+            ) : (
+              <ReadingStream
+                key={streamKey}
+                readingId={reading.id}
+                qa={probeAnswers}
+                onCards={(payload) => {
+                  setCardIds(payload.card_ids)
+                  setSpreadType(payload.spread_type)
+                  setStreamError(null)
+                }}
+                onComplete={() => {
+                  setStreamError(null)
                   void refreshReading()
-                }, 1200)
-              }}
-              onError={(message) => setStreamError(message)}
-            />
+                  window.setTimeout(() => {
+                    void refreshReading()
+                  }, 1200)
+                }}
+                onError={(message) => setStreamError(message)}
+              />
+            )
           ) : (
             <section className="mystica-panel rounded-[2rem] px-6 py-8 md:px-8">
               <p className="mystica-label">Interpretação</p>

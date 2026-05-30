@@ -16,9 +16,20 @@ export interface OrchestrationInput {
   question: string
 }
 
-export async function buildReadingContext(
+export interface ReadingKnowledge {
+  cardLines: string[]
+  ragContext: string
+  historyContext: string
+}
+
+/**
+ * Retrieve everything needed to read a spread: formatted card lines, the RAG
+ * knowledge (Pinecone hybrid search), and the user's recent-history context.
+ * Shared by the full interpretation and the "Mystica pergunta" probe.
+ */
+export async function retrieveReadingKnowledge(
   input: OrchestrationInput
-): Promise<string> {
+): Promise<ReadingKnowledge> {
   const { supabase, userId, cardIds, spreadType, readingStyle, question } = input
 
   const cards = cardIds.map((cardId) => getCard(cardId))
@@ -54,12 +65,28 @@ export async function buildReadingContext(
     (chunk, index, all) => all.indexOf(chunk) === index
   )
 
+  return {
+    cardLines,
+    ragContext: uniqueChunks.join('\n\n---\n\n'),
+    historyContext: formatHistoryContext(history),
+  }
+}
+
+export async function buildReadingContext(
+  input: OrchestrationInput,
+  probeContext?: string
+): Promise<string> {
+  const { spreadType, readingStyle, question } = input
+  const { cardLines, ragContext, historyContext } =
+    await retrieveReadingKnowledge(input)
+
   return buildReadingPrompt({
     spreadType,
     readingStyle,
     cardLines,
     question,
-    ragContext: uniqueChunks.join('\n\n---\n\n'),
-    historyContext: formatHistoryContext(history),
+    ragContext,
+    historyContext,
+    probeContext,
   })
 }

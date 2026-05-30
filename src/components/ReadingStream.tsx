@@ -3,6 +3,7 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 
+import type { ProbeQA } from '@/lib/probe'
 import type { SpreadType } from '@/lib/tarot'
 
 interface ReadingStreamProps {
@@ -10,6 +11,8 @@ interface ReadingStreamProps {
   onCards: (payload: { card_ids: number[]; spread_type: SpreadType }) => void
   onComplete: () => void
   onError?: (message: string) => void
+  /** "Mystica pergunta" answers to fold into the interpretation. */
+  qa?: ProbeQA[]
 }
 
 export function ReadingStream({
@@ -17,11 +20,14 @@ export function ReadingStream({
   onCards,
   onComplete,
   onError,
+  qa,
 }: ReadingStreamProps) {
   const [text, setText] = useState('')
   const [status, setStatus] = useState<'loading' | 'streaming' | 'done' | 'error'>('loading')
   const [error, setError] = useState<string | null>(null)
   const mountedRef = useRef(true)
+  const qaRef = useRef<ProbeQA[]>(qa ?? [])
+  qaRef.current = qa ?? []
   const emitCards = useEffectEvent(onCards)
   const emitComplete = useEffectEvent(onComplete)
   const emitError = useEffectEvent((message: string) => onError?.(message))
@@ -33,6 +39,8 @@ export function ReadingStream({
       try {
         const response = await fetch(`/api/reading/${readingId}/interpret`, {
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ qa: qaRef.current }),
         })
 
         if (!response.ok) {

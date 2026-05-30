@@ -134,7 +134,8 @@ describe('reading interpretation encryption', () => {
     expect(buildReadingContext).toHaveBeenCalledWith(
       expect.objectContaining({
         readingStyle: 'acolhedora',
-      })
+      }),
+      undefined
     )
     expect(streamInterpretation).toHaveBeenCalledWith('prompt', expect.any(String))
     expect(encryptForUser).toHaveBeenNthCalledWith(1, 'user-1', 'pergunta em claro')
